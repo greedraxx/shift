@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>SHIFT - 근무 캘린더</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-gradient-start: #0f0f0f;
+            --bg-gradient-end: #1a1a1a;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-tertiary: rgba(255, 255, 255, 0.4);
+            --modal-bg: rgba(30, 30, 30, 0.95);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --input-border: rgba(255, 255, 255, 0.15);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-gradient-start: #f5f7fa;
+            --bg-gradient-end: #e4e9f0;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a5568;
+            --text-tertiary: #718096;
+            --modal-bg: rgba(255, 255, 255, 0.98);
+            --input-bg: rgba(0, 0, 0, 0.03);
+            --input-border: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding-bottom: 50px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .app-title {
+            font-size: 22px;
+            font-weight: 950;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            -webkit-text-stroke: 0.5px var(--text-primary);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            right: 16px;
+            background: var(--input-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 17px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            margin: 0 8px 2px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .month-nav button {
+            background: var(--input-bg);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .month-nav button:active {
+            transform: scale(0.95);
+            background: var(--input-bg);
+        }
+
+        .month-display {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .calendar-container {
+            padding: 0 8px 10px;
+        }
+
+        .month-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            padding: 8px 0 6px;
+            text-align: center;
+            display: none;
+        }
+
+        .weekday-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-bottom: 1px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 600;
+            font-size: 10px;
+            color: var(--text-tertiary);
+            padding: 6px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .weekday.sunday { color: #ff3b3b; }
+        .weekday.saturday { color: #3b9cff; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+
+        .day-cell {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 5px;
+            padding: 6px 4px;
+            min-height: 110px;
+            max-height: 110px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .day-cell:active {
+            transform: scale(0.97);
+            background: var(--input-bg);
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+        }
+
+        .day-cell.other-month {
+            opacity: 0.35;
+        }
+
+        .day-cell.today {
+            border: 2px solid var(--text-primary);
+            box-shadow: 0 0 12px var(--glass-border);
+        }
+
+        .day-cell.holiday {
+            background: rgba(255, 59, 59, 0.08);
+            border-color: rgba(255, 59, 59, 0.2);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 3px;
+        }
+
+        .day-number {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .day-cell.sunday .day-number,
+        .day-cell.holiday .day-number {
+            color: #ff3b3b;
+        }
+
+        .day-cell.saturday .day-number {
+            color: #3b9cff;
+        }
+
+        .holiday-name {
+            font-size: 9px;
+            color: #ff3b3b;
+            font-weight: 600;
+            margin-bottom: 3px;
+            line-height: 1.2;
+        }
+
+        .shift-badge {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid;
+            flex-shrink: 0;
+        }
+
+        .shift-badge.주간 {
+            background: #ffc107;
+            color: #000;
+            border-color: #ffc107;
+        }
+
+        .shift-badge.당직 {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .shift-badge.비번 {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .personal-events {
+            margin-top: 18px;
+        }
+
+        .personal-events > div {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-bottom: 1px;
+        }
+
+        .event-dot {
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 1px;
+            flex-shrink: 0;
+        }
+
+        .event-dot.black { background: #000000; }
+        .event-dot.yellow { background: #F9A825; }
+        .event-dot.blue { background: #1565C0; }
+        .event-dot.orange { background: #E65100; }
+
+        .event-text {
+            font-size: 9px;
+            font-weight: 600;
+            line-height: 1.1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 34px;
+        }
+
+        .event-text.black { color: #000000; }
+        .event-text.yellow { color: #F9A825; }
+        .event-text.blue { color: #1565C0; }
+        .event-text.orange { color: #E65100; }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: var(--modal-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 16px 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            font-size: 22px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-date {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .shift-selector {
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .shift-selector-title {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .shift-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        .shift-option {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .shift-option.selected {
+            border-width: 2px;
+        }
+
+        .shift-option.주간.selected {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+
+        .shift-option.당직.selected {
+            background: rgba(40, 167, 69, 0.15);
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .shift-option.비번.selected {
+            background: rgba(220, 53, 69, 0.15);
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .event-list {
+            margin-bottom: 16px;
+        }
+
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .delete-event-btn {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-event-form {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            align-items: center;
+        }
+
+        .event-input {
+            flex: 1;
+            padding: 12px;
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--input-border);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-primary);
+            min-width: 0;
+        }
+
+        .event-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .add-event-btn {
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .color-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-btn.selected {
+            border-color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .color-btn.black { background: #000000; }
+        .color-btn.yellow { background: #F9A825; }
+        .color-btn.blue { background: #1565C0; }
+        .color-btn.orange { background: #E65100; }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .quick-add-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 16px;
+            background: transparent;
+            z-index: 100;
+        }
+
+        .quick-add-btn {
+            width: 100%;
+            padding: 10px;
+            background: #000000;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .quick-add-btn:active {
+            transform: scale(0.98);
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="app-title">SHIFT</div>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+    </div>
+
+    <div class="month-nav">
+        <button onclick="changeMonth(-1)">◀</button>
+        <div class="month-display" id="monthDisplay"></div>
+        <button onclick="changeMonth(1)">▶</button>
+    </div>
+
+    <!-- 캘린더 (1달만 표시) -->
+    <div class="calendar-container">
+        <div class="month-label" id="monthLabel1"></div>
+        <div class="weekday-header">
+            <div class="weekday sunday">일</div>
+            <div class="weekday">월</div>
+            <div class="weekday">화</div>
+            <div class="weekday">수</div>
+            <div class="weekday">목</div>
+            <div class="weekday">금</div>
+            <div class="weekday saturday">토</div>
+        </div>
+        <div class="calendar-grid" id="calendarGrid1"></div>
+    </div>
+
+    <!-- 하단 퀵버튼 -->
+    <div class="quick-add-container">
+        <button class="quick-add-btn" onclick="openTodayModal()">
+            <span>+</span>
+            <span>오늘 일정 추가</span>
+        </button>
+    </div>
+
+    <!-- 일정 추가 모달 -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">일정 관리</div>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-date" id="modalDate"></div>
+            
+            <!-- 근무 변경 -->
+            <div class="shift-selector">
+                <div class="shift-selector-title">근무 변경</div>
+                <div class="shift-options">
+                    <button class="shift-option 주간" data-shift="주간" onclick="changeShift('주간')">주간</button>
+                    <button class="shift-option 당직" data-shift="당직" onclick="changeShift('당직')">당직</button>
+                    <button class="shift-option 비번" data-shift="비번" onclick="changeShift('비번')">비번</button>
+                </div>
+            </div>
+            
+            <div class="event-list" id="eventList"></div>
+            <div class="color-picker">
+                <div class="color-btn black selected" data-color="black" onclick="selectColor('black')"></div>
+                <div class="color-btn yellow" data-color="yellow" onclick="selectColor('yellow')"></div>
+                <div class="color-btn blue" data-color="blue" onclick="selectColor('blue')"></div>
+                <div class="color-btn orange" data-color="orange" onclick="selectColor('orange')"></div>
+            </div>
+            <div class="add-event-form">
+                <input type="text" class="event-input" id="eventInput" placeholder="일정 입력...">
+                <button class="add-event-btn" onclick="addEvent()">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 현재 날짜
+        const today = new Date();
+        let currentYear = today.getFullYear();
+        let currentMonth = today.getMonth() + 1;
+        let selectedYear = null;
+        let selectedMonth = null;
+        let selectedDay = null;
+
+        // 임동재 근무 패턴
+        const shiftCycle = ['당직', '비번', '주간'];
+
+        // 공휴일
+        const holidays = {
+            '2026-1-1': '신정',
+            '2026-2-16': '설날',
+            '2026-2-17': '설날',
+            '2026-2-18': '설날',
+            '2026-3-1': '삼일절',
+            '2026-3-2': '대체공휴일',
+            '2026-5-1': '근로자의날',
+            '2026-5-5': '어린이날',
+            '2026-5-25': '부처님오신날',
+            '2026-5-26': '대체공휴일',
+            '2026-6-3': '지방선거일',
+            '2026-6-6': '현충일',
+            '2026-8-15': '광복절',
+            '2026-8-17': '대체공휴일',
+            '2026-9-24': '추석',
+            '2026-9-25': '추석',
+            '2026-9-26': '추석',
+            '2026-10-3': '개천절',
+            '2026-10-5': '대체공휴일',
+            '2026-10-9': '한글날',
+            '2026-12-25': '크리스마스'
+        };
+
+        // 개인 일정 (로컬스토리지)
+        let personalEvents = JSON.parse(localStorage.getItem('shiftEvents') || '{}');
+        
+        // 커스텀 근무 (로컬스토리지)
+        let customShifts = JSON.parse(localStorage.getItem('customShifts') || '{}');
+
+        // 2026년 1월 1일부터의 총 일수 계산
+        function getTotalDays(year, month, day) {
+            const base = new Date(2026, 0, 1);
+            const target = new Date(year, month - 1, day);
+            return Math.floor((target - base) / (1000 * 60 * 60 * 24));
+        }
+
+        // 임동재 근무 계산
+        function getShift(year, month, day) {
+            // 커스텀 근무가 있으면 우선 반환
+            const dateKey = year + '-' + month + '-' + day;
+            if (customShifts[dateKey]) {
+                return customShifts[dateKey];
+            }
+            
+            const totalDays = getTotalDays(year, month, day);
+            var cycleIndex = totalDays % 3;
+            if (cycleIndex < 0) cycleIndex = cycleIndex + 3;
+            var shift = shiftCycle[cycleIndex];
+            
+            // 주말/공휴일이면 주간을 비번으로
+            if (shift === '주간' && isWeekendOrHoliday(year, month, day)) {
+                shift = '비번';
+            }
+            
+            return shift;
+        }
+
+        // 주말/공휴일 확인
+        function isWeekendOrHoliday(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            const weekday = date.getDay();
+            const dateStr = `${year}-${month}-${day}`;
+            return weekday === 0 || weekday === 6 || holidays[dateStr];
+        }
+
+        // 공휴일 이름
+        function getHoliday(year, month, day) {
+            return holidays[`${year}-${month}-${day}`];
+        }
+
+        // 월의 일수
+        function getDaysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        // 월의 첫날 요일
+        function getFirstDay(year, month) {
+            return new Date(year, month - 1, 1).getDay();
+        }
+
+        // 오늘 날짜 확인
+        function isToday(year, month, day) {
+            const today = new Date();
+            return today.getFullYear() === year && 
+                   today.getMonth() === month - 1 && 
+                   today.getDate() === day;
+        }
+
+        // 캘린더 렌더링
+        function renderCalendar() {
+            // 월 표시
+            document.getElementById('monthDisplay').textContent = `${currentYear}년 ${currentMonth}월`;
+            
+            // 캘린더 렌더링
+            document.getElementById('monthLabel1').textContent = `${currentYear}년 ${currentMonth}월`;
+            renderMonth(currentYear, currentMonth, 'calendarGrid1');
+        }
+        
+        // 특정 월 렌더링
+        function renderMonth(year, month, gridId) {
+            const grid = document.getElementById(gridId);
+            grid.innerHTML = '';
+            
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDay(year, month);
+            
+            // 전월 날짜 계산
+            let prevYear = year;
+            let prevMonth = month - 1;
+            if (prevMonth < 1) {
+                prevMonth = 12;
+                prevYear--;
+            }
+            const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
+            
+            // 전월 날짜 셀
+            for (let i = 0; i < firstDay; i++) {
+                const prevDay = daysInPrevMonth - firstDay + 1 + i;
+                const cell = createDayCell(prevYear, prevMonth, prevDay, true);
+                grid.appendChild(cell);
+            }
+            
+            // 현재 월 날짜 셀
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = createDayCell(year, month, day, false);
+                grid.appendChild(cell);
+            }
+            
+            // 다음달 날짜 계산
+            const totalCells = firstDay + daysInMonth;
+            const remainingCells = totalCells % 7;
+            
+            // 마지막 주가 꽉 차있지 않으면 다음달 날짜 표시
+            if (remainingCells > 0) {
+                let nextYear = year;
+                let nextMonth = month + 1;
+                if (nextMonth > 12) {
+                    nextMonth = 1;
+                    nextYear++;
+                }
+                
+                const cellsToAdd = 7 - remainingCells;
+                for (let day = 1; day <= cellsToAdd; day++) {
+                    const cell = createDayCell(nextYear, nextMonth, day, true);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // 날짜 셀 생성
+        function createDayCell(year, month, day, isOtherMonth) {
+            const cell = document.createElement('div');
+            const date = new Date(year, month - 1, day);
+            const weekday = date.getDay();
+            const holiday = getHoliday(year, month, day);
+            const shift = getShift(year, month, day);
+            
+            cell.className = 'day-cell';
+            if (isOtherMonth) cell.classList.add('other-month');
+            if (weekday === 0) cell.classList.add('sunday');
+            if (weekday === 6) cell.classList.add('saturday');
+            if (holiday) cell.classList.add('holiday');
+            if (!isOtherMonth && isToday(year, month, day)) cell.classList.add('today');
+            
+            // 헤더: 날짜(좌측) + 근무 배지(우측)
+            const header = document.createElement('div');
+            header.className = 'day-header';
+            
+            const dayNum = document.createElement('div');
+            dayNum.className = 'day-number';
+            dayNum.textContent = day;
+            header.appendChild(dayNum);
+            
+            // 둥근 정사각형 근무 배지 (우측 상단)
+            const shiftBadge = document.createElement('div');
+            shiftBadge.className = `shift-badge ${shift}`;
+            shiftBadge.textContent = shift[0]; // 주/당/비
+            header.appendChild(shiftBadge);
+            
+            cell.appendChild(header);
+            
+            // 공휴일
+            if (holiday) {
+                const holidayName = document.createElement('div');
+                holidayName.className = 'holiday-name';
+                holidayName.textContent = holiday;
+                cell.appendChild(holidayName);
+            }
+            
+            // 개인 일정
+            const dateKey = `${year}-${month}-${day}`;
+            const events = personalEvents[dateKey] || [];
+            if (events.length > 0) {
+                const eventContainer = document.createElement('div');
+                eventContainer.className = 'personal-events';
+                
+                events.slice(0, 4).forEach(event => {
+                    const text = typeof event === 'string' ? event : event.text;
+                    const color = typeof event === 'string' ? 'black' : event.color;
+                    const eventDiv = document.createElement('div');
+                    eventDiv.innerHTML = `<span class="event-dot ${color}"></span><span class="event-text ${color}">${text}</span>`;
+                    eventContainer.appendChild(eventDiv);
+                });
+                
+                cell.appendChild(eventContainer);
+            }
+            
+            // 클릭 이벤트 - year, month 저장
+            cell.onclick = () => openModal(year, month, day);
+            
+            return cell;
+        }
+
+        // 모달 열기
+        function openModal(year, month, day) {
+            selectedYear = year;
+            selectedMonth = month;
+            selectedDay = day;
+            
+            const modal = document.getElementById('eventModal');
+            const shift = getShift(year, month, day);
+            const holiday = getHoliday(year, month, day);
+            
+            document.getElementById('modalDate').textContent = 
+                year + '년 ' + month + '월 ' + day + '일' + (holiday ? ' (' + holiday + ')' : '');
+            
+            // 현재 근무 상태 표시
+            document.querySelectorAll('.shift-option').forEach(function(btn) {
+                btn.classList.remove('selected');
+                if (btn.dataset.shift === shift) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            renderEventList();
+            modal.classList.add('show');
+        }
+
+        // 오늘 일정 추가 모달 열기
+        function openTodayModal() {
+            var t = new Date();
+            openModal(t.getFullYear(), t.getMonth() + 1, t.getDate());
+        }
+
+        // 근무 변경
+        function changeShift(newShift) {
+            const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            customShifts[dateKey] = newShift;
+            localStorage.setItem('customShifts', JSON.stringify(customShifts));
+            
+            // 버튼 상태 업데이트
+            document.querySelectorAll('.shift-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.shift === newShift) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            renderCalendar();
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('eventModal').classList.remove('show');
+            document.getElementById('eventInput').value = '';
+        }
+
+        // 일정 목록 렌더링
+        function renderEventList() {
+            const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            const events = personalEvents[dateKey] || [];
+            const list = document.getElementById('eventList');
+            
+            if (events.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 20px;">등록된 일정이 없습니다</div>';
+                return;
+            }
+            
+            const colorStyles = {black: '#000', yellow: '#F9A825', blue: '#1565C0', orange: '#E65100'};
+            list.innerHTML = events.map((event, index) => {
+                const text = typeof event === 'string' ? event : event.text;
+                const color = typeof event === 'string' ? 'black' : event.color;
+                return `
+                    <div class="event-item">
+                        <span style="color:${colorStyles[color]}">■ ${text}</span>
+                        <button class="delete-event-btn" onclick="deleteEvent(${index})">삭제</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 선택된 색상
+        let selectedColor = 'black';
+
+        // 색상 선택
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        // 일정 추가
+        function addEvent() {
+            const input = document.getElementById('eventInput');
+            const eventText = input.value.trim();
+            
+            if (!eventText) return;
+            
+            const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            if (!personalEvents[dateKey]) {
+                personalEvents[dateKey] = [];
+            }
+            
+            personalEvents[dateKey].push({text: eventText, color: selectedColor});
+            localStorage.setItem('shiftEvents', JSON.stringify(personalEvents));
+            
+            input.value = '';
+            renderEventList();
+            renderCalendar();
+        }
+
+        // 일정 삭제
+        function deleteEvent(index) {
+            const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            personalEvents[dateKey].splice(index, 1);
+            
+            if (personalEvents[dateKey].length === 0) {
+                delete personalEvents[dateKey];
+            }
+            
+            localStorage.setItem('shiftEvents', JSON.stringify(personalEvents));
+            renderEventList();
+            renderCalendar();
+        }
+
+        // 월 변경
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            } else if (currentMonth < 1) {
+                currentMonth = 12;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        // 테마 토글
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            const themeBtn = document.getElementById('themeToggle');
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
+        }
+
+        // 테마 초기화
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const html = document.documentElement;
+            const themeBtn = document.getElementById('themeToggle');
+            
+            html.setAttribute('data-theme', savedTheme);
+            themeBtn.textContent = savedTheme === 'light' ? '🌙' : '☀️';
+        }
+
+        // 스와이프 기능
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        function handleSwipe() {
+            const swipeThreshold = 50; // 최소 스와이프 거리
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // 왼쪽 스와이프 - 다음 달
+                    changeMonth(1);
+                } else {
+                    // 오른쪽 스와이프 - 이전 달
+                    changeMonth(-1);
+                }
+            }
+        }
+
+        // Enter 키로 일정 추가
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme(); // 테마 초기화
+            
+            // 스와이프 이벤트 등록
+            const calendarContainer = document.querySelector('.calendar-container');
+            
+            calendarContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            
+            calendarContainer.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+            
+            document.getElementById('eventInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addEvent();
+            });
+            
+            // 모달 배경 클릭시 닫기
+            document.getElementById('eventModal').addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) closeModal();
+            });
+            
+            renderCalendar();
+        });
+    </script>
+</body>
+</html>
