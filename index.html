@@ -774,14 +774,16 @@
 
                 // 데이터를 날짜별로 그룹화
                 personalEvents = {};
-                data.forEach(event => {
+                (data || []).forEach(event => {
+                    if (!event || !event.date) return; // 유효하지 않은 데이터 건너뜀
+
                     if (!personalEvents[event.date]) {
                         personalEvents[event.date] = [];
                     }
                     personalEvents[event.date].push({
                         id: event.id,
-                        title: event.title,
-                        color: event.color
+                        title: event.title || event.text || '(내용 없음)', // 호환성 처리
+                        color: event.color || 'black'
                     });
                 });
 
@@ -804,8 +806,10 @@
 
                 // 데이터를 날짜별로 매핑
                 customShifts = {};
-                data.forEach(shift => {
-                    customShifts[shift.date] = shift.shift_type;
+                (data || []).forEach(shift => {
+                    if (shift && shift.date && shift.shift_type) {
+                        customShifts[shift.date] = shift.shift_type;
+                    }
                 });
 
                 console.log('커스텀 근무 로드 완료:', Object.keys(customShifts).length, '일');
@@ -976,22 +980,27 @@
                 cell.appendChild(holidayName);
             }
 
-            // 개인 일정
-            const dateKey = `${year}-${month}-${day}`;
-            const events = personalEvents[dateKey] || [];
-            if (events.length > 0) {
-                const eventContainer = document.createElement('div');
-                eventContainer.className = 'personal-events';
+            // 개인 일정 (안전하게 처리)
+            try {
+                const dateKey = `${year}-${month}-${day}`;
+                const events = personalEvents[dateKey] || [];
+                if (events.length > 0) {
+                    const eventContainer = document.createElement('div');
+                    eventContainer.className = 'personal-events';
 
-                events.slice(0, 4).forEach(event => {
-                    const text = event.title || event.text || event;  // 호환성 유지
-                    const color = event.color || 'black';
-                    const eventDiv = document.createElement('div');
-                    eventDiv.innerHTML = `<span class="event-dot ${color}"></span><span class="event-text ${color}">${text}</span>`;
-                    eventContainer.appendChild(eventDiv);
-                });
+                    events.slice(0, 4).forEach(event => {
+                        if (!event) return;
+                        const text = event.title || event.text || event || '(오류)';
+                        const color = event.color || 'black';
+                        const eventDiv = document.createElement('div');
+                        eventDiv.innerHTML = `<span class="event-dot ${color}"></span><span class="event-text ${color}">${text}</span>`;
+                        eventContainer.appendChild(eventDiv);
+                    });
 
-                cell.appendChild(eventContainer);
+                    cell.appendChild(eventContainer);
+                }
+            } catch (err) {
+                console.warn('일정 렌더링 중 오류 무시:', err);
             }
 
             // 클릭 이벤트 - year, month 저장
