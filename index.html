@@ -659,7 +659,7 @@
             <span>+</span>
             <span>오늘 일정 추가</span>
         </button>
-        <div style="text-align: center; font-size: 10px; color: #555; margin-top: 5px;">v1.1 (패치완료)</div>
+        <div style="text-align: center; font-size: 10px; color: #555; margin-top: 5px;">v1.2 (복구완료)</div>
     </div>
 
     <!-- 일정 추가 모달 -->
@@ -702,14 +702,15 @@
         const SUPABASE_URL = 'https://rsdwsrcvamiimqgcyfne.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_i1U5cLmaJTXfEVQ6ANvnZQ_KerWxS2U';
 
-        // Supabase 클라이언트 초기화 (안전장치)
-        let supabase = null;
+        // Supabase 클라이언트 초기화 (안전장치 - 변수명 충돌 방지)
+        var supabaseClient = null;
         try {
             if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                // 이미 선언된 경우 재사용
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 console.log('✅ Supabase 연결 성공');
             } else {
-                console.warn('⚠️ Supabase 스크립트가 로드되지 않음 (네트워크/차단 확인)');
+                console.warn('⚠️ Supabase 스크립트가 로드되지 않음');
             }
         } catch (err) {
             console.error('❌ Supabase 초기화 중 에러:', err);
@@ -767,7 +768,7 @@
         // 개인 일정 로드
         async function loadPersonalEvents() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('shift_events')
                     .select('*');
 
@@ -799,7 +800,7 @@
         // 커스텀 근무 로드
         async function loadCustomShifts() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('custom_shifts')
                     .select('*');
 
@@ -1048,7 +1049,7 @@
 
             try {
                 // Supabase에 저장 (upsert: 있으면 업데이트, 없으면 삽입)
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('custom_shifts')
                     .upsert({
                         date: dateKey,
@@ -1136,7 +1137,7 @@
 
             try {
                 // Supabase에 저장
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('shift_events')
                     .insert({
                         date: dateKey,
@@ -1175,7 +1176,7 @@
 
             try {
                 // Supabase에서 삭제
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('shift_events')
                     .delete()
                     .eq('id', event.id);
@@ -1293,7 +1294,7 @@
 
             // 데이터 로드 시도
             try {
-                if (supabase) {
+                if (supabaseClient) {
                     console.log('📡 Supabase 데이터 로드 시작...');
                     await Promise.all([
                         loadPersonalEvents().catch(e => console.error('개인 일정 로드 실패(내부)', e)),
