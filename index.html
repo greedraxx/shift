@@ -607,9 +607,10 @@
         .quick-add-btn {
             width: 100%;
             padding: 10px;
-            background: #000000;
+            background: #2d2d2d;
+            /* 다크모드: 짙은 회색 */
             color: white;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             font-size: 14px;
             font-weight: 700;
@@ -621,8 +622,18 @@
             transition: all 0.3s;
         }
 
+        /* 라이트 모드에서는 버튼 검정색 */
+        [data-theme="light"] .quick-add-btn {
+            background: #000000;
+            border-color: transparent;
+        }
+
         .quick-add-btn:active {
             transform: scale(0.98);
+            background: #444;
+        }
+
+        [data-theme="light"] .quick-add-btn:active {
             background: #333;
         }
     </style>
@@ -661,7 +672,7 @@
             <span>+</span>
             <span>오늘 일정 추가</span>
         </button>
-        <div style="text-align: center; font-size: 10px; color: #555; margin-top: 5px;">v1.2 (복구완료)</div>
+        <div style="text-align: center; font-size: 10px; color: #555; margin-top: 5px;">v1.3</div>
     </div>
 
     <!-- 일정 추가 모달 -->
