@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -166,8 +167,13 @@
             letter-spacing: 0.3px;
         }
 
-        .weekday.sunday { color: #ff3b3b; }
-        .weekday.saturday { color: #3b9cff; }
+        .weekday.sunday {
+            color: #ff3b3b;
+        }
+
+        .weekday.saturday {
+            color: #3b9cff;
+        }
 
         .calendar-grid {
             display: grid;
@@ -280,7 +286,7 @@
             margin-top: 18px;
         }
 
-        .personal-events > div {
+        .personal-events>div {
             display: flex;
             align-items: center;
             gap: 3px;
@@ -295,10 +301,21 @@
             flex-shrink: 0;
         }
 
-        .event-dot.black { background: #000000; }
-        .event-dot.yellow { background: #F9A825; }
-        .event-dot.blue { background: #1565C0; }
-        .event-dot.orange { background: #E65100; }
+        .event-dot.black {
+            background: #000000;
+        }
+
+        .event-dot.yellow {
+            background: #F9A825;
+        }
+
+        .event-dot.blue {
+            background: #1565C0;
+        }
+
+        .event-dot.orange {
+            background: #E65100;
+        }
 
         .event-text {
             font-size: 9px;
@@ -310,10 +327,21 @@
             max-width: 34px;
         }
 
-        .event-text.black { color: #000000; }
-        .event-text.yellow { color: #F9A825; }
-        .event-text.blue { color: #1565C0; }
-        .event-text.orange { color: #E65100; }
+        .event-text.black {
+            color: #000000;
+        }
+
+        .event-text.yellow {
+            color: #F9A825;
+        }
+
+        .event-text.blue {
+            color: #1565C0;
+        }
+
+        .event-text.orange {
+            color: #E65100;
+        }
 
         /* 모달 */
         .modal {
@@ -525,20 +553,41 @@
             transform: scale(1.1);
         }
 
-        .color-btn.black { background: #000000; }
-        .color-btn.yellow { background: #F9A825; }
-        .color-btn.blue { background: #1565C0; }
-        .color-btn.orange { background: #E65100; }
+        .color-btn.black {
+            background: #000000;
+        }
+
+        .color-btn.yellow {
+            background: #F9A825;
+        }
+
+        .color-btn.blue {
+            background: #1565C0;
+        }
+
+        .color-btn.orange {
+            background: #E65100;
+        }
 
         /* 애니메이션 */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
         }
 
         .quick-add-container {
@@ -574,6 +623,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <div class="app-title">SHIFT</div>
@@ -617,7 +667,7 @@
                 <button class="close-btn" onclick="closeModal()">×</button>
             </div>
             <div class="modal-date" id="modalDate"></div>
-            
+
             <!-- 근무 변경 -->
             <div class="shift-selector">
                 <div class="shift-selector-title">근무 변경</div>
@@ -627,7 +677,7 @@
                     <button class="shift-option 비번" data-shift="비번" onclick="changeShift('비번')">비번</button>
                 </div>
             </div>
-            
+
             <div class="event-list" id="eventList"></div>
             <div class="color-picker">
                 <div class="color-btn black selected" data-color="black" onclick="selectColor('black')"></div>
@@ -643,6 +693,20 @@
     </div>
 
     <script>
+        // ========================================
+        // SUPABASE 설정
+        // ========================================
+        const SUPABASE_URL = 'https://rsdwsrcvamiimqgcyfne.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_i1U5cLmaJTXfEVQ6ANvnZQ_KerWxS2U';
+
+        // Supabase 클라이언트 초기화
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('✅ Supabase 연결됨');
+
+        // ========================================
+        // 데이터 관리
+        // ========================================
+
         // 현재 날짜
         const today = new Date();
         let currentYear = today.getFullYear();
@@ -679,11 +743,67 @@
             '2026-12-25': '크리스마스'
         };
 
-        // 개인 일정 (로컬스토리지)
-        let personalEvents = JSON.parse(localStorage.getItem('shiftEvents') || '{}');
-        
-        // 커스텀 근무 (로컬스토리지)
-        let customShifts = JSON.parse(localStorage.getItem('customShifts') || '{}');
+
+        // 개인 일정 및 커스텀 근무 (메모리에 캐시)
+        let personalEvents = {};
+        let customShifts = {};
+
+        // ========================================
+        // SUPABASE 데이터 로딩
+        // ========================================
+
+        // 개인 일정 로드
+        async function loadPersonalEvents() {
+            try {
+                const { data, error } = await supabase
+                    .from('shift_events')
+                    .select('*');
+
+                if (error) throw error;
+
+                // 데이터를 날짜별로 그룹화
+                personalEvents = {};
+                data.forEach(event => {
+                    if (!personalEvents[event.date]) {
+                        personalEvents[event.date] = [];
+                    }
+                    personalEvents[event.date].push({
+                        id: event.id,
+                        title: event.title,
+                        color: event.color
+                    });
+                });
+
+                console.log('개인 일정 로드 완료:', Object.keys(personalEvents).length, '일');
+            } catch (error) {
+                console.error('개인 일정 로드 실패:', error);
+                // 로컬스토리지 폴백
+                personalEvents = JSON.parse(localStorage.getItem('shiftEvents') || '{}');
+            }
+        }
+
+        // 커스텀 근무 로드
+        async function loadCustomShifts() {
+            try {
+                const { data, error } = await supabase
+                    .from('custom_shifts')
+                    .select('*');
+
+                if (error) throw error;
+
+                // 데이터를 날짜별로 매핑
+                customShifts = {};
+                data.forEach(shift => {
+                    customShifts[shift.date] = shift.shift_type;
+                });
+
+                console.log('커스텀 근무 로드 완료:', Object.keys(customShifts).length, '일');
+            } catch (error) {
+                console.error('커스텀 근무 로드 실패:', error);
+                // 로컬스토리지 폴백
+                customShifts = JSON.parse(localStorage.getItem('customShifts') || '{}');
+            }
+        }
 
         // 2026년 1월 1일부터의 총 일수 계산
         function getTotalDays(year, month, day) {
@@ -699,17 +819,17 @@
             if (customShifts[dateKey]) {
                 return customShifts[dateKey];
             }
-            
+
             const totalDays = getTotalDays(year, month, day);
             var cycleIndex = totalDays % 3;
             if (cycleIndex < 0) cycleIndex = cycleIndex + 3;
             var shift = shiftCycle[cycleIndex];
-            
+
             // 주말/공휴일이면 주간을 비번으로
             if (shift === '주간' && isWeekendOrHoliday(year, month, day)) {
                 shift = '비번';
             }
-            
+
             return shift;
         }
 
@@ -739,29 +859,29 @@
         // 오늘 날짜 확인
         function isToday(year, month, day) {
             const today = new Date();
-            return today.getFullYear() === year && 
-                   today.getMonth() === month - 1 && 
-                   today.getDate() === day;
+            return today.getFullYear() === year &&
+                today.getMonth() === month - 1 &&
+                today.getDate() === day;
         }
 
         // 캘린더 렌더링
         function renderCalendar() {
             // 월 표시
             document.getElementById('monthDisplay').textContent = `${currentYear}년 ${currentMonth}월`;
-            
+
             // 캘린더 렌더링
             document.getElementById('monthLabel1').textContent = `${currentYear}년 ${currentMonth}월`;
             renderMonth(currentYear, currentMonth, 'calendarGrid1');
         }
-        
+
         // 특정 월 렌더링
         function renderMonth(year, month, gridId) {
             const grid = document.getElementById(gridId);
             grid.innerHTML = '';
-            
+
             const daysInMonth = getDaysInMonth(year, month);
             const firstDay = getFirstDay(year, month);
-            
+
             // 전월 날짜 계산
             let prevYear = year;
             let prevMonth = month - 1;
@@ -770,24 +890,24 @@
                 prevYear--;
             }
             const daysInPrevMonth = getDaysInMonth(prevYear, prevMonth);
-            
+
             // 전월 날짜 셀
             for (let i = 0; i < firstDay; i++) {
                 const prevDay = daysInPrevMonth - firstDay + 1 + i;
                 const cell = createDayCell(prevYear, prevMonth, prevDay, true);
                 grid.appendChild(cell);
             }
-            
+
             // 현재 월 날짜 셀
             for (let day = 1; day <= daysInMonth; day++) {
                 const cell = createDayCell(year, month, day, false);
                 grid.appendChild(cell);
             }
-            
+
             // 다음달 날짜 계산
             const totalCells = firstDay + daysInMonth;
             const remainingCells = totalCells % 7;
-            
+
             // 마지막 주가 꽉 차있지 않으면 다음달 날짜 표시
             if (remainingCells > 0) {
                 let nextYear = year;
@@ -796,7 +916,7 @@
                     nextMonth = 1;
                     nextYear++;
                 }
-                
+
                 const cellsToAdd = 7 - remainingCells;
                 for (let day = 1; day <= cellsToAdd; day++) {
                     const cell = createDayCell(nextYear, nextMonth, day, true);
@@ -812,31 +932,31 @@
             const weekday = date.getDay();
             const holiday = getHoliday(year, month, day);
             const shift = getShift(year, month, day);
-            
+
             cell.className = 'day-cell';
             if (isOtherMonth) cell.classList.add('other-month');
             if (weekday === 0) cell.classList.add('sunday');
             if (weekday === 6) cell.classList.add('saturday');
             if (holiday) cell.classList.add('holiday');
             if (!isOtherMonth && isToday(year, month, day)) cell.classList.add('today');
-            
+
             // 헤더: 날짜(좌측) + 근무 배지(우측)
             const header = document.createElement('div');
             header.className = 'day-header';
-            
+
             const dayNum = document.createElement('div');
             dayNum.className = 'day-number';
             dayNum.textContent = day;
             header.appendChild(dayNum);
-            
+
             // 둥근 정사각형 근무 배지 (우측 상단)
             const shiftBadge = document.createElement('div');
             shiftBadge.className = `shift-badge ${shift}`;
             shiftBadge.textContent = shift[0]; // 주/당/비
             header.appendChild(shiftBadge);
-            
+
             cell.appendChild(header);
-            
+
             // 공휴일
             if (holiday) {
                 const holidayName = document.createElement('div');
@@ -844,28 +964,28 @@
                 holidayName.textContent = holiday;
                 cell.appendChild(holidayName);
             }
-            
+
             // 개인 일정
             const dateKey = `${year}-${month}-${day}`;
             const events = personalEvents[dateKey] || [];
             if (events.length > 0) {
                 const eventContainer = document.createElement('div');
                 eventContainer.className = 'personal-events';
-                
+
                 events.slice(0, 4).forEach(event => {
-                    const text = typeof event === 'string' ? event : event.text;
-                    const color = typeof event === 'string' ? 'black' : event.color;
+                    const text = event.title || event.text || event;  // 호환성 유지
+                    const color = event.color || 'black';
                     const eventDiv = document.createElement('div');
                     eventDiv.innerHTML = `<span class="event-dot ${color}"></span><span class="event-text ${color}">${text}</span>`;
                     eventContainer.appendChild(eventDiv);
                 });
-                
+
                 cell.appendChild(eventContainer);
             }
-            
+
             // 클릭 이벤트 - year, month 저장
             cell.onclick = () => openModal(year, month, day);
-            
+
             return cell;
         }
 
@@ -874,22 +994,22 @@
             selectedYear = year;
             selectedMonth = month;
             selectedDay = day;
-            
+
             const modal = document.getElementById('eventModal');
             const shift = getShift(year, month, day);
             const holiday = getHoliday(year, month, day);
-            
-            document.getElementById('modalDate').textContent = 
+
+            document.getElementById('modalDate').textContent =
                 year + '년 ' + month + '월 ' + day + '일' + (holiday ? ' (' + holiday + ')' : '');
-            
+
             // 현재 근무 상태 표시
-            document.querySelectorAll('.shift-option').forEach(function(btn) {
+            document.querySelectorAll('.shift-option').forEach(function (btn) {
                 btn.classList.remove('selected');
                 if (btn.dataset.shift === shift) {
                     btn.classList.add('selected');
                 }
             });
-            
+
             renderEventList();
             modal.classList.add('show');
         }
@@ -901,11 +1021,29 @@
         }
 
         // 근무 변경
-        function changeShift(newShift) {
+        async function changeShift(newShift) {
             const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
             customShifts[dateKey] = newShift;
-            localStorage.setItem('customShifts', JSON.stringify(customShifts));
-            
+
+            try {
+                // Supabase에 저장 (upsert: 있으면 업데이트, 없으면 삽입)
+                const { error } = await supabase
+                    .from('custom_shifts')
+                    .upsert({
+                        date: dateKey,
+                        shift_type: newShift
+                    }, {
+                        onConflict: 'date'
+                    });
+
+                if (error) throw error;
+                console.log('근무 변경 저장 완료:', dateKey, newShift);
+            } catch (error) {
+                console.error('근무 변경 저장 실패:', error);
+                // 로컬스토리지 폴백
+                localStorage.setItem('customShifts', JSON.stringify(customShifts));
+            }
+
             // 버튼 상태 업데이트
             document.querySelectorAll('.shift-option').forEach(btn => {
                 btn.classList.remove('selected');
@@ -913,7 +1051,7 @@
                     btn.classList.add('selected');
                 }
             });
-            
+
             renderCalendar();
         }
 
@@ -928,16 +1066,16 @@
             const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
             const events = personalEvents[dateKey] || [];
             const list = document.getElementById('eventList');
-            
+
             if (events.length === 0) {
                 list.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 20px;">등록된 일정이 없습니다</div>';
                 return;
             }
-            
-            const colorStyles = {black: '#000', yellow: '#F9A825', blue: '#1565C0', orange: '#E65100'};
+
+            const colorStyles = { black: '#000', yellow: '#F9A825', blue: '#1565C0', orange: '#E65100' };
             list.innerHTML = events.map((event, index) => {
-                const text = typeof event === 'string' ? event : event.text;
-                const color = typeof event === 'string' ? 'black' : event.color;
+                const text = event.title || event.text || event;  // 호환성 유지
+                const color = event.color || 'black';
                 return `
                     <div class="event-item">
                         <span style="color:${colorStyles[color]}">■ ${text}</span>
@@ -962,35 +1100,80 @@
         }
 
         // 일정 추가
-        function addEvent() {
+        async function addEvent() {
             const input = document.getElementById('eventInput');
             const eventText = input.value.trim();
-            
+
             if (!eventText) return;
-            
+
             const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
             if (!personalEvents[dateKey]) {
                 personalEvents[dateKey] = [];
             }
-            
-            personalEvents[dateKey].push({text: eventText, color: selectedColor});
-            localStorage.setItem('shiftEvents', JSON.stringify(personalEvents));
-            
+
+            const newEvent = { title: eventText, color: selectedColor };
+
+            try {
+                // Supabase에 저장
+                const { data, error } = await supabase
+                    .from('shift_events')
+                    .insert({
+                        date: dateKey,
+                        title: eventText,
+                        color: selectedColor
+                    })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                // 로컬 캐시에 ID 포함하여 추가
+                personalEvents[dateKey].push({
+                    id: data.id,
+                    title: eventText,
+                    color: selectedColor
+                });
+
+                console.log('일정 추가 완료:', eventText);
+            } catch (error) {
+                console.error('일정 추가 실패:', error);
+                // 로컬스토리지 폴백
+                personalEvents[dateKey].push(newEvent);
+                localStorage.setItem('shiftEvents', JSON.stringify(personalEvents));
+            }
+
             input.value = '';
             renderEventList();
             renderCalendar();
         }
 
         // 일정 삭제
-        function deleteEvent(index) {
+        async function deleteEvent(index) {
             const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            const event = personalEvents[dateKey][index];
+
+            try {
+                // Supabase에서 삭제
+                const { error } = await supabase
+                    .from('shift_events')
+                    .delete()
+                    .eq('id', event.id);
+
+                if (error) throw error;
+                console.log('일정 삭제 완료:', event.title);
+            } catch (error) {
+                console.error('일정 삭제 실패:', error);
+                // 로컬스토리지 폴백
+                localStorage.setItem('shiftEvents', JSON.stringify(personalEvents));
+            }
+
+            // 로컬 캐시에서 삭제
             personalEvents[dateKey].splice(index, 1);
-            
+
             if (personalEvents[dateKey].length === 0) {
                 delete personalEvents[dateKey];
             }
-            
-            localStorage.setItem('shiftEvents', JSON.stringify(personalEvents));
+
             renderEventList();
             renderCalendar();
         }
@@ -1014,7 +1197,7 @@
             const currentTheme = html.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             const themeBtn = document.getElementById('themeToggle');
-            
+
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
@@ -1025,7 +1208,7 @@
             const savedTheme = localStorage.getItem('theme') || 'light';
             const html = document.documentElement;
             const themeBtn = document.getElementById('themeToggle');
-            
+
             html.setAttribute('data-theme', savedTheme);
             themeBtn.textContent = savedTheme === 'light' ? '🌙' : '☀️';
         }
@@ -1033,11 +1216,11 @@
         // 스와이프 기능
         let touchStartX = 0;
         let touchEndX = 0;
-        
+
         function handleSwipe() {
             const swipeThreshold = 50; // 최소 스와이프 거리
             const diff = touchStartX - touchEndX;
-            
+
             if (Math.abs(diff) > swipeThreshold) {
                 if (diff > 0) {
                     // 왼쪽 스와이프 - 다음 달
@@ -1049,33 +1232,40 @@
             }
         }
 
-        // Enter 키로 일정 추가
-        document.addEventListener('DOMContentLoaded', () => {
+        // Enter 키로 일정 추가 및 초기화
+        document.addEventListener('DOMContentLoaded', async () => {
             initTheme(); // 테마 초기화
-            
+
+            // Supabase 데이터 로드
+            await Promise.all([
+                loadPersonalEvents(),
+                loadCustomShifts()
+            ]);
+
             // 스와이프 이벤트 등록
             const calendarContainer = document.querySelector('.calendar-container');
-            
+
             calendarContainer.addEventListener('touchstart', (e) => {
                 touchStartX = e.changedTouches[0].screenX;
             }, { passive: true });
-            
+
             calendarContainer.addEventListener('touchend', (e) => {
                 touchEndX = e.changedTouches[0].screenX;
                 handleSwipe();
             }, { passive: true });
-            
+
             document.getElementById('eventInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') addEvent();
             });
-            
+
             // 모달 배경 클릭시 닫기
             document.getElementById('eventModal').addEventListener('click', (e) => {
                 if (e.target.classList.contains('modal')) closeModal();
             });
-            
+
             renderCalendar();
         });
     </script>
 </body>
+
 </html>
