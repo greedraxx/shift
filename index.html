@@ -68,15 +68,17 @@
             position: relative;
         }
 
-        .app-title {
-            font-size: 22px;
-            font-weight: 950;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            -webkit-text-stroke: 0.5px var(--text-primary);
+        .app-logo {
+            height: 28px;
+            object-fit: contain;
+            /* 기본(다크모드)에서는 흰색으로 반전 */
+            filter: invert(1);
+            transition: all 0.3s;
+        }
+
+        /* 라이트 모드에서는 원래 색상(검정) */
+        [data-theme="light"] .app-logo {
+            filter: invert(0);
         }
 
         .theme-toggle {
@@ -628,7 +630,7 @@
 
 <body>
     <div class="header">
-        <div class="app-title">SHIFT</div>
+        <img src="logo.png" class="app-logo" alt="SHIFT">
         <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
     </div>
 
