@@ -699,9 +699,18 @@
         const SUPABASE_URL = 'https://rsdwsrcvamiimqgcyfne.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_i1U5cLmaJTXfEVQ6ANvnZQ_KerWxS2U';
 
-        // Supabase 클라이언트 초기화
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('✅ Supabase 연결됨');
+        // Supabase 클라이언트 초기화 (안전장치)
+        let supabase = null;
+        try {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('✅ Supabase 연결 성공');
+            } else {
+                console.warn('⚠️ Supabase 스크립트가 로드되지 않음 (네트워크/차단 확인)');
+            }
+        } catch (err) {
+            console.error('❌ Supabase 초기화 중 에러:', err);
+        }
 
         // ========================================
         // 데이터 관리
@@ -1232,38 +1241,63 @@
             }
         }
 
-        // Enter 키로 일정 추가 및 초기화
+        // ========================================
+        // 안전한 실행 보장
+        // ========================================
         document.addEventListener('DOMContentLoaded', async () => {
-            initTheme(); // 테마 초기화
+            console.log('🚀 애플리케이션 시작');
 
-            // Supabase 데이터 로드
-            await Promise.all([
-                loadPersonalEvents(),
-                loadCustomShifts()
-            ]);
+            try {
+                initTheme(); // 테마 초기화
+            } catch (e) { console.error('테마 초기화 실패', e); }
 
-            // 스와이프 이벤트 등록
-            const calendarContainer = document.querySelector('.calendar-container');
+            // 스와이프 및 이벤트 리스너 등록 (렌더링 전 미리 등록)
+            try {
+                const calendarContainer = document.querySelector('.calendar-container');
+                if (calendarContainer) {
+                    calendarContainer.addEventListener('touchstart', (e) => {
+                        touchStartX = e.changedTouches[0].screenX;
+                    }, { passive: true });
+                    calendarContainer.addEventListener('touchend', (e) => {
+                        touchEndX = e.changedTouches[0].screenX;
+                        handleSwipe();
+                    }, { passive: true });
+                }
 
-            calendarContainer.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
+                const eventInput = document.getElementById('eventInput');
+                if (eventInput) {
+                    eventInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') addEvent();
+                    });
+                }
 
-            calendarContainer.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            }, { passive: true });
+                const eventModal = document.getElementById('eventModal');
+                if (eventModal) {
+                    eventModal.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('modal')) closeModal();
+                    });
+                }
+            } catch (e) { console.error('이벤트 리스너 등록 실패', e); }
 
-            document.getElementById('eventInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addEvent();
-            });
-
-            // 모달 배경 클릭시 닫기
-            document.getElementById('eventModal').addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal')) closeModal();
-            });
-
-            renderCalendar();
+            // 데이터 로드 시도
+            try {
+                if (supabase) {
+                    console.log('📡 Supabase 데이터 로드 시작...');
+                    await Promise.all([
+                        loadPersonalEvents().catch(e => console.error('개인 일정 로드 실패(내부)', e)),
+                        loadCustomShifts().catch(e => console.error('커스텀 근무 로드 실패(내부)', e))
+                    ]);
+                    console.log('✅ Supabase 데이터 로드 완료');
+                } else {
+                    console.warn('⚠️ Supabase 클라이언트 없음 - 로컬스토리지 모드');
+                }
+            } catch (error) {
+                console.error('❌ 데이터 로드 중 치명적 오류 (무시하고 진행):', error);
+            } finally {
+                // 어떤 상황에서도 캘린더는 반드시 그린다
+                console.log('📅 캘린더 렌더링 시작');
+                renderCalendar();
+            }
         });
     </script>
 </body>
