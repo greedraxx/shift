@@ -1312,6 +1312,31 @@
             }
         });
     </script>
+    <!-- 디버깅용 에러 로그 (문제 해결 후 삭제 예정) -->
+    <div id="debugLog"
+        style="background: rgba(0,0,0,0.8); color: #ff5555; padding: 10px; font-size: 12px; white-space: pre-wrap; display: none; margin-top: 20px;">
+    </div>
+
+    <script>
+        // 에러 발생 시 화면에 표시
+        window.onerror = function (msg, url, line, col, error) {
+            const logBox = document.getElementById('debugLog');
+            if (logBox) {
+                logBox.style.display = 'block';
+                logBox.innerHTML += `❌ ERROR: ${msg}\nLine: ${line}:${col}\n${error ? error.stack : ''}\n\n`;
+            }
+            return false;
+        };
+
+        // 비동기 에러 잡기
+        window.addEventListener('unhandledrejection', function (event) {
+            const logBox = document.getElementById('debugLog');
+            if (logBox) {
+                logBox.style.display = 'block';
+                logBox.innerHTML += `⚠️ ASYNC ERROR: ${event.reason}\n\n`;
+            }
+        });
+    </script>
 </body>
 
 </html>
