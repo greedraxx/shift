@@ -903,7 +903,10 @@
 
     <!-- 오늘 일정 섹션 -->
     <div class="today-events-section">
-        <div class="today-events-title">오늘 일정</div>
+        <div class="today-events-title">
+            오늘 일정 <span id="todayDateDisplay"
+                style="font-size: 13px; font-weight: normal; color: var(--text-tertiary); margin-left: 8px;"></span>
+        </div>
         <div id="todayEventsList" class="today-events-list">
             <!-- 자바스크립트로 동적 생성 -->
         </div>
@@ -1186,7 +1189,16 @@
             if (!listContainer) return;
 
             const t = new Date();
-            const dateKey = `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`;
+            const month = t.getMonth() + 1;
+            const day = t.getDate();
+            const dateKey = `${t.getFullYear()}-${month}-${day}`;
+
+            // 날짜 표시 업데이트
+            const dateDisplay = document.getElementById('todayDateDisplay');
+            if (dateDisplay) {
+                dateDisplay.textContent = `(${month}월 ${day}일)`;
+            }
+
             const events = personalEvents[dateKey] || [];
 
             if (events.length === 0) {
