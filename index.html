@@ -636,6 +636,71 @@
         [data-theme="light"] .quick-add-btn:active {
             background: #333;
         }
+
+        /* 스티커 기능 */
+        .sticker-selector {
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .sticker-options {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .sticker-option {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            background: var(--input-bg);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 4px;
+        }
+
+        .sticker-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sticker-option.selected {
+            border-color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .sticker-option.none {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+        }
+
+        .sticker-container {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 32px;
+            height: 32px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .sticker-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     </style>
 </head>
 
@@ -691,6 +756,20 @@
                     <button class="shift-option 주간" data-shift="주간" onclick="changeShift('주간')">주간</button>
                     <button class="shift-option 당직" data-shift="당직" onclick="changeShift('당직')">당직</button>
                     <button class="shift-option 비번" data-shift="비번" onclick="changeShift('비번')">비번</button>
+                </div>
+            </div>
+
+            <!-- 스티커 선택 -->
+            <div class="sticker-selector">
+                <div class="shift-selector-title">스티커 선택</div>
+                <div class="sticker-options">
+                    <button class="sticker-option none" data-sticker="none" onclick="selectSticker('none')">안 함</button>
+                    <button class="sticker-option" data-sticker="boy" onclick="selectSticker('boy')">
+                        <img src="boy.png" alt="소년">
+                    </button>
+                    <button class="sticker-option" data-sticker="girl" onclick="selectSticker('girl')">
+                        <img src="girl.png" alt="소녀">
+                    </button>
                 </div>
             </div>
 
@@ -773,6 +852,7 @@
         // 개인 일정 및 커스텀 근무 (메모리에 캐시)
         let personalEvents = {};
         let customShifts = {};
+        let stickers = {};
 
         // ========================================
         // SUPABASE 데이터 로딩
@@ -832,6 +912,17 @@
                 console.error('커스텀 근무 로드 실패:', error);
                 // 로컬스토리지 폴백
                 customShifts = JSON.parse(localStorage.getItem('customShifts') || '{}');
+            }
+        }
+
+        // 스티커 데이터 로드
+        function loadStickers() {
+            try {
+                stickers = JSON.parse(localStorage.getItem('shiftStickers') || '{}');
+                console.log('스티커 데이터 로드 완료:', Object.keys(stickers).length, '일');
+            } catch (error) {
+                console.error('스티커 데이터 로드 실패:', error);
+                stickers = {};
             }
         }
 
@@ -1018,6 +1109,18 @@
                 console.warn('일정 렌더링 중 오류 무시:', err);
             }
 
+            // 스티커 표시
+            const dateKey = `${year}-${month}-${day}`;
+            if (stickers[dateKey] && stickers[dateKey] !== 'none') {
+                const stickerBox = document.createElement('div');
+                stickerBox.className = 'sticker-container';
+                const img = document.createElement('img');
+                img.src = stickers[dateKey] + '.png';
+                img.className = 'sticker-img';
+                stickerBox.appendChild(img);
+                cell.appendChild(stickerBox);
+            }
+
             // 클릭 이벤트 - year, month 저장
             cell.onclick = () => openModal(year, month, day);
 
@@ -1041,6 +1144,16 @@
             document.querySelectorAll('.shift-option').forEach(function (btn) {
                 btn.classList.remove('selected');
                 if (btn.dataset.shift === shift) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            // 현재 스티커 상태 표시
+            const dateKey = `${year}-${month}-${day}`;
+            const currentSticker = stickers[dateKey] || 'none';
+            document.querySelectorAll('.sticker-option').forEach(function (btn) {
+                btn.classList.remove('selected');
+                if (btn.dataset.sticker === currentSticker) {
                     btn.classList.add('selected');
                 }
             });
@@ -1226,6 +1339,29 @@
             renderCalendar();
         }
 
+        // 스티커 선택
+        function selectSticker(type) {
+            const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            if (type === 'none') {
+                delete stickers[dateKey];
+            } else {
+                stickers[dateKey] = type;
+            }
+
+            // 저장
+            localStorage.setItem('shiftStickers', JSON.stringify(stickers));
+
+            // UI 업데이트
+            document.querySelectorAll('.sticker-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.sticker === (type || 'none')) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            renderCalendar();
+        }
+
         // 테마 토글
         function toggleTheme() {
             const html = document.documentElement;
@@ -1317,6 +1453,9 @@
                 } else {
                     console.warn('⚠️ Supabase 클라이언트 없음 - 로컬스토리지 모드');
                 }
+
+                // 스티커 데이터 로드
+                loadStickers();
             } catch (error) {
                 console.error('❌ 데이터 로드 중 치명적 오류 (무시하고 진행):', error);
             } finally {
