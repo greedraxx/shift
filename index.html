@@ -1098,9 +1098,10 @@
                     events.slice(0, 4).forEach(event => {
                         if (!event) return;
                         const text = event.title || event.text || event || '(오류)';
+                        const truncatedText = text.length > 4 ? text.substring(0, 4) + '..' : text;
                         const color = event.color || 'black';
                         const eventDiv = document.createElement('div');
-                        eventDiv.innerHTML = `<span class="event-dot ${color}"></span><span class="event-text ${color}">${text}</span>`;
+                        eventDiv.innerHTML = `<span class="event-dot ${color}"></span><span class="event-text ${color}">${truncatedText}</span>`;
                         eventContainer.appendChild(eventDiv);
                     });
 
