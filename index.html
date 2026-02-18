@@ -770,6 +770,54 @@
             color: var(--text-tertiary);
             font-size: 13px;
         }
+
+        /* 메모 섹션 */
+        .memo-section {
+            padding: 0 16px 100px;
+            /* 하단 퀵버튼 고려하여 여백 넉넉히 */
+            margin-top: 10px;
+        }
+
+        .memo-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .memo-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: #ffcc00;
+            border-radius: 2px;
+        }
+
+        .memo-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .memo-textarea::placeholder {
+            color: var(--text-tertiary);
+        }
     </style>
 </head>
 
@@ -806,6 +854,12 @@
         <div id="todayEventsList" class="today-events-list">
             <!-- 자바스크립트로 동적 생성 -->
         </div>
+    </div>
+
+    <!-- 메모 섹션 -->
+    <div class="memo-section">
+        <div class="memo-title">메모</div>
+        <textarea id="memoArea" class="memo-textarea" placeholder="자유롭게 메모를 입력하세요..."></textarea>
     </div>
 
     <!-- 하단 퀵버튼 -->
@@ -1094,6 +1148,20 @@
                     <div class="title">${event.title}</div>
                 </div>
             `).join('');
+        }
+
+        // 메모 데이터 관리
+        function loadMemo() {
+            const savedMemo = localStorage.getItem('shiftMemo') || '';
+            const memoArea = document.getElementById('memoArea');
+            if (memoArea) memoArea.value = savedMemo;
+        }
+
+        function saveMemo() {
+            const memoArea = document.getElementById('memoArea');
+            if (memoArea) {
+                localStorage.setItem('shiftMemo', memoArea.value);
+            }
         }
 
         // 특정 월 렌더링
@@ -1560,12 +1628,21 @@
 
                 // 스티커 데이터 로드
                 loadStickers();
+
+                // 메모 로드
+                loadMemo();
             } catch (error) {
                 console.error('❌ 데이터 로드 중 치명적 오류 (무시하고 진행):', error);
             } finally {
                 // 어떤 상황에서도 캘린더는 반드시 그린다
                 console.log('📅 캘린더 렌더링 시작');
                 renderCalendar();
+            }
+
+            // 메모 자동 저장 이벤트
+            const memoArea = document.getElementById('memoArea');
+            if (memoArea) {
+                memoArea.addEventListener('input', saveMemo);
             }
         });
     </script>
