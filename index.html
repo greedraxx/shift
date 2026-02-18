@@ -819,14 +819,21 @@
             color: var(--text-tertiary);
         }
 
-        .shift-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+        .shift-selector {
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            padding: 14px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            /* 버튼 위치 조정을 위해 추가 */
         }
 
         .shift-save-btn {
+            position: absolute;
+            top: 14px;
+            right: 14px;
             padding: 4px 12px;
             background: #667eea;
             color: white;
@@ -836,6 +843,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
+            z-index: 10;
         }
 
         .shift-save-btn:active {
@@ -905,10 +913,8 @@
 
             <!-- 근무 변경 -->
             <div class="shift-selector">
-                <div class="shift-header">
-                    <div class="shift-selector-title" style="margin-bottom:0;">근무 변경</div>
-                    <button class="shift-save-btn" id="shiftSaveBtn" onclick="saveShift()">저장</button>
-                </div>
+                <div class="shift-selector-title">근무 변경</div>
+                <button class="shift-save-btn" id="shiftSaveBtn" onclick="saveShift()">저장</button>
                 <div class="shift-options">
                     <button class="shift-option 주간" data-shift="주간" onclick="selectShift('주간')">주간</button>
                     <button class="shift-option 당직" data-shift="당직" onclick="selectShift('당직')">당직</button>
