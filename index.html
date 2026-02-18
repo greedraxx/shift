@@ -216,13 +216,16 @@
         }
 
         .day-cell.today {
-            border: 2px solid var(--text-primary);
-            box-shadow: 0 0 12px var(--glass-border);
+            border: 2.5px solid #000;
+            /* 검정색 테두리로 강조 */
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            /* 테두리가 겹칠 경우 위로 오도록 함 */
         }
 
         .day-cell.holiday {
             background: rgba(255, 59, 59, 0.08);
-            border-color: rgba(255, 59, 59, 0.2);
+            /* 오늘 강조가 있을 경우 보더 칼라 충돌 방지 */
         }
 
         .day-header {
