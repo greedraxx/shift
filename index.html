@@ -445,16 +445,20 @@
 
         .shift-option {
             flex: 1;
-            padding: 10px;
+            padding: 8px 4px;
+            /* 패딩 축소 */
             border-radius: 10px;
             border: 1px solid var(--input-border);
             background: var(--input-bg);
             color: var(--text-secondary);
-            font-size: 13px;
+            font-size: 12px;
+            /* 13px -> 12px */
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             text-align: center;
+            white-space: nowrap;
+            /* 글자 줄바꿈 방지 */
         }
 
         .shift-option.selected {
@@ -667,8 +671,9 @@
         }
 
         .sticker-option {
-            width: 64px;
-            height: 64px;
+            width: 50px;
+            /* 64px -> 50px (~20% 축소) */
+            height: 50px;
             border-radius: 12px;
             border: 2px solid transparent;
             background: var(--input-bg);
@@ -842,19 +847,21 @@
         }
 
         .shift-save-btn {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            padding: 4px 12px;
+            width: 38px;
+            /* 정사각형 크기 */
+            height: 38px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 8px;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            z-index: 10;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .shift-save-btn:active {
@@ -925,17 +932,17 @@
             <!-- 근무 변경 -->
             <div class="shift-selector">
                 <div class="shift-selector-title">근무 변경</div>
-                <button class="shift-save-btn" id="shiftSaveBtn" onclick="saveShift()">저장</button>
                 <div class="shift-options">
                     <button class="shift-option 주간" data-shift="주간" onclick="selectShift('주간')">주간</button>
                     <button class="shift-option 당직" data-shift="당직" onclick="selectShift('당직')">당직</button>
                     <button class="shift-option 비번" data-shift="비번" onclick="selectShift('비번')">비번</button>
+                    <button class="shift-save-btn" id="shiftSaveBtn" onclick="saveShift()">저장</button>
                 </div>
             </div>
 
-            <!-- 스티커 선택 -->
+            <!-- 스티커 -->
             <div class="sticker-selector">
-                <div class="shift-selector-title">스티커 선택</div>
+                <div class="shift-selector-title">스티커</div>
                 <div class="sticker-options">
                     <button class="sticker-option none" data-sticker="none" onclick="selectSticker('none')">안 함</button>
                     <button class="sticker-option" data-sticker="boy" onclick="selectSticker('boy')">
