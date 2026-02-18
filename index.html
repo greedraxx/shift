@@ -818,6 +818,30 @@
         .memo-textarea::placeholder {
             color: var(--text-tertiary);
         }
+
+        .shift-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .shift-save-btn {
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .shift-save-btn:active {
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
     </style>
 </head>
 
@@ -881,11 +905,14 @@
 
             <!-- 근무 변경 -->
             <div class="shift-selector">
-                <div class="shift-selector-title">근무 변경</div>
+                <div class="shift-header">
+                    <div class="shift-selector-title" style="margin-bottom:0;">근무 변경</div>
+                    <button class="shift-save-btn" id="shiftSaveBtn" onclick="saveShift()">저장</button>
+                </div>
                 <div class="shift-options">
-                    <button class="shift-option 주간" data-shift="주간" onclick="changeShift('주간')">주간</button>
-                    <button class="shift-option 당직" data-shift="당직" onclick="changeShift('당직')">당직</button>
-                    <button class="shift-option 비번" data-shift="비번" onclick="changeShift('비번')">비번</button>
+                    <button class="shift-option 주간" data-shift="주간" onclick="selectShift('주간')">주간</button>
+                    <button class="shift-option 당직" data-shift="당직" onclick="selectShift('당직')">당직</button>
+                    <button class="shift-option 비번" data-shift="비번" onclick="selectShift('비번')">비번</button>
                 </div>
             </div>
 
@@ -1307,6 +1334,8 @@
             const shift = getShift(year, month, day);
             const holiday = getHoliday(year, month, day);
 
+            pendingShift = shift; // 초기값 설정 (선택만 된 상태)
+
             document.getElementById('modalDate').textContent =
                 year + '년 ' + month + '월 ' + day + '일' + (holiday ? ' (' + holiday + ')' : '');
 
@@ -1338,8 +1367,33 @@
             openModal(t.getFullYear(), t.getMonth() + 1, t.getDate());
         }
 
-        // 근무 변경
-        async function changeShift(newShift) {
+        // 현재 선택된 임시 근무 저장용
+        let pendingShift = null;
+
+        // 근무 선택 (UI만 변경)
+        function selectShift(newShift) {
+            pendingShift = newShift;
+
+            // 버튼 상태 업데이트
+            document.querySelectorAll('.shift-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.shift === newShift) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            // 저장 버튼 강조 (선택되었음을 알림)
+            const saveBtn = document.getElementById('shiftSaveBtn');
+            if (saveBtn) {
+                saveBtn.style.background = '#4a90e2';
+                saveBtn.textContent = '저장*';
+            }
+        }
+
+        // 근무 저장 (실제 데이터 기록)
+        async function saveShift() {
+            if (!pendingShift) return;
+            const newShift = pendingShift;
             const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
             customShifts[dateKey] = newShift;
 
@@ -1356,19 +1410,22 @@
 
                 if (error) throw error;
                 console.log('근무 변경 저장 완료:', dateKey, newShift);
+
+                // 저장 완료 후 상태 복구
+                const saveBtn = document.getElementById('shiftSaveBtn');
+                if (saveBtn) {
+                    saveBtn.style.background = '#28a745'; // 성공 강조색
+                    saveBtn.textContent = '완료';
+                    setTimeout(() => {
+                        saveBtn.style.background = '#667eea';
+                        saveBtn.textContent = '저장';
+                    }, 1000);
+                }
             } catch (error) {
                 console.error('근무 변경 저장 실패:', error);
                 // 로컬스토리지 폴백
                 localStorage.setItem('customShifts', JSON.stringify(customShifts));
             }
-
-            // 버튼 상태 업데이트
-            document.querySelectorAll('.shift-option').forEach(btn => {
-                btn.classList.remove('selected');
-                if (btn.dataset.shift === newShift) {
-                    btn.classList.add('selected');
-                }
-            });
 
             renderCalendar();
         }
