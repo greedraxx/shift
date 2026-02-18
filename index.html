@@ -427,7 +427,8 @@
         .shift-selector-title {
             font-size: 12px;
             color: var(--text-tertiary);
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            /* 10px -> 6px (내부 여백 축소) */
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -643,10 +644,10 @@
         .sticker-selector {
             background: var(--input-bg);
             backdrop-filter: blur(20px);
-            padding: 14px;
+            padding: 8px 14px;
+            /* 14px -> 8px (내부 상하 여백 30% 이상 축소) */
             border-radius: 14px;
             margin-bottom: 11px;
-            /* 16px -> 11px (약 30% 감소) */
             border: 1px solid var(--glass-border);
         }
 
