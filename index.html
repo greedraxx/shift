@@ -419,7 +419,8 @@
         .shift-selector {
             background: var(--input-bg);
             backdrop-filter: blur(20px);
-            padding: 14px;
+            padding: 4px 14px;
+            /* 14px -> 4px */
             border-radius: 14px;
             margin-bottom: 10px;
             /* 16px -> 10px */
@@ -431,6 +432,8 @@
         .shift-selector-title {
             font-size: 12px;
             color: var(--text-tertiary);
+            margin-top: 0;
+            /* 상단 여백 제거 */
             margin-bottom: 6px;
             /* 10px -> 6px (내부 여백 축소) */
             font-weight: 600;
@@ -654,8 +657,8 @@
         .sticker-selector {
             background: var(--input-bg);
             backdrop-filter: blur(20px);
-            padding: 8px 14px;
-            /* 14px -> 8px (내부 상하 여백 30% 이상 축소) */
+            padding: 4px 14px;
+            /* 8px -> 4px */
             border-radius: 14px;
             margin-top: 0px;
             /* 위쪽 여백 제거하여 상하 일관성 유지 */
