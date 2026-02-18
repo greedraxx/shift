@@ -905,7 +905,7 @@
     <div class="today-events-section">
         <div class="today-events-title">
             오늘 일정 <span id="todayDateDisplay"
-                style="font-size: 13px; font-weight: normal; color: var(--text-tertiary); margin-left: 8px;"></span>
+                style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-left: 8px;"></span>
         </div>
         <div id="todayEventsList" class="today-events-list">
             <!-- 자바스크립트로 동적 생성 -->
@@ -1196,7 +1196,9 @@
             // 날짜 표시 업데이트
             const dateDisplay = document.getElementById('todayDateDisplay');
             if (dateDisplay) {
-                dateDisplay.textContent = `(${month}월 ${day}일)`;
+                const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+                const dayOfWeek = weekDays[t.getDay()];
+                dateDisplay.textContent = `(${month}월 ${day}일 ${dayOfWeek}요일)`;
             }
 
             const events = personalEvents[dateKey] || [];
