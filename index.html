@@ -531,11 +531,18 @@
             padding: 12px;
             background: var(--input-bg);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--input-border);
+            border: 2px solid #667eea;
             border-radius: 10px;
             font-size: 14px;
             color: var(--text-primary);
             min-width: 0;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .event-input:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            border-color: #5a6fe0;
         }
 
         .event-input::placeholder {
@@ -724,6 +731,8 @@
         .sticker-container.left {
             right: auto;
             left: 4px;
+            width: 17px;
+            height: 17px;
         }
 
         /* 아코디언 스타일 추가 */
