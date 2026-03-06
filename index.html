@@ -714,8 +714,9 @@
             position: absolute;
             bottom: 4px;
             right: 4px;
-            width: 26px;
-            height: 26px;
+            width: 20px;
+            /* 26px -> 20px (약 20~23% 축소) */
+            height: 20px;
             pointer-events: none;
             z-index: 5;
         }
@@ -1714,7 +1715,15 @@
                 }
             } catch (e) { console.error('이벤트 리스너 등록 실패', e); }
 
-            // 데이터 로드 시도
+            // [Layout Shift 수정]
+            // 메모 및 스티커 데이터는 동기 처리가 가능하므로 즉시 불러옵니다.
+            loadStickers();
+            loadMemo();
+
+            // 백엔드 통신 대기로 인한 화면 밀림(Layout Shift)을 방지하기 위해 뼈대 달력을 먼저 그립니다.
+            renderCalendar();
+
+            // 외부 데이터 비동기 로드 시도
             try {
                 if (supabaseClient) {
                     console.log('📡 Supabase 데이터 로드 시작...');
@@ -1723,21 +1732,14 @@
                         loadCustomShifts().catch(e => console.error('커스텀 근무 로드 실패(내부)', e))
                     ]);
                     console.log('✅ Supabase 데이터 로드 완료');
+
+                    // Supabase 호출 성공 시 최신 데이터(개인 일정, 커스텀 근무)를 반영하여 캘린더를 업데이트합니다.
+                    renderCalendar();
                 } else {
                     console.warn('⚠️ Supabase 클라이언트 없음 - 로컬스토리지 모드');
                 }
-
-                // 스티커 데이터 로드
-                loadStickers();
-
-                // 메모 로드
-                loadMemo();
             } catch (error) {
                 console.error('❌ 데이터 로드 중 치명적 오류 (무시하고 진행):', error);
-            } finally {
-                // 어떤 상황에서도 캘린더는 반드시 그린다
-                console.log('📅 캘린더 렌더링 시작');
-                renderCalendar();
             }
 
             // 메모 자동 저장 이벤트
