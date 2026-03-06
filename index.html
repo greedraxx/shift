@@ -726,6 +726,79 @@
             left: 4px;
         }
 
+        /* 아코디언 스타일 추가 */
+        .sticker-accordion {
+            background: var(--input-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            margin-top: 0px;
+            margin-bottom: 15px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] .accordion-header:active {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .accordion-title {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .accordion-icon {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            transition: transform 0.3s ease;
+        }
+
+        .accordion-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 14px;
+        }
+
+        .accordion-content.open {
+            max-height: 350px;
+            padding-bottom: 12px;
+        }
+
+        .accordion-inner-selector {
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border-radius: 0;
+        }
+
+        .accordion-inner-selector:last-child {
+            margin-bottom: 0px;
+        }
+
         .sticker-img {
             width: 100%;
             height: 100%;
@@ -944,8 +1017,65 @@
             </div>
             <div class="modal-date" id="modalDate"></div>
 
+            <!-- 추가된 일정 목록 -->
+            <div class="event-list" id="eventList"></div>
+
+            <!-- 일정 추가 폼 -->
+            <div class="color-picker">
+                <div class="color-btn black selected" data-color="black" onclick="selectColor('black')"></div>
+                <div class="color-btn yellow" data-color="yellow" onclick="selectColor('yellow')"></div>
+                <div class="color-btn blue" data-color="blue" onclick="selectColor('blue')"></div>
+                <div class="color-btn orange" data-color="orange" onclick="selectColor('orange')"></div>
+            </div>
+            <div class="add-event-form" style="margin-bottom: 15px;">
+                <input type="text" class="event-input" id="eventInput" placeholder="일정 입력...">
+                <button class="add-event-btn" onclick="addEvent()">추가</button>
+            </div>
+
+            <!-- 스티커 아코디언 -->
+            <div class="sticker-accordion">
+                <div class="accordion-header" onclick="toggleStickerAccordion()">
+                    <div class="accordion-title">스티커</div>
+                    <div class="accordion-icon" id="stickerAccordionIcon">▼</div>
+                </div>
+                <div class="accordion-content" id="stickerAccordionContent">
+                    <!-- 우측 스티커 -->
+                    <div class="accordion-inner-selector">
+                        <div class="shift-selector-title" style="font-size: 11px;">Right</div>
+                        <div class="sticker-options right-stickers">
+                            <button class="sticker-option none" data-sticker="none"
+                                onclick="selectRightSticker('none')">안 함</button>
+                            <button class="sticker-option" data-sticker="boy" onclick="selectRightSticker('boy')">
+                                <img src="boy.png" alt="소년">
+                            </button>
+                            <button class="sticker-option" data-sticker="girl" onclick="selectRightSticker('girl')">
+                                <img src="girl.png" alt="소녀">
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 좌측 스티커 -->
+                    <div class="accordion-inner-selector">
+                        <div class="shift-selector-title" style="font-size: 11px;">Left</div>
+                        <div class="sticker-options left-stickers">
+                            <button class="sticker-option none" data-sticker="none"
+                                onclick="selectLeftSticker('none')">안 함</button>
+                            <button class="sticker-option" data-sticker="segok" onclick="selectLeftSticker('segok')">
+                                <img src="segok.png" alt="세곡">
+                            </button>
+                            <button class="sticker-option" data-sticker="suseo" onclick="selectLeftSticker('suseo')">
+                                <img src="suseo.png" alt="수서">
+                            </button>
+                            <button class="sticker-option" data-sticker="mok" onclick="selectLeftSticker('mok')">
+                                <img src="mok.png" alt="목">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 근무 변경 -->
-            <div class="shift-selector">
+            <div class="shift-selector" style="margin-bottom: 0;">
                 <div class="shift-selector-title">근무 변경</div>
                 <div class="shift-options">
                     <button class="shift-option 주간" data-shift="주간" onclick="selectShift('주간')">주간</button>
@@ -953,38 +1083,6 @@
                     <button class="shift-option 비번" data-shift="비번" onclick="selectShift('비번')">비번</button>
                     <button class="shift-save-btn" id="shiftSaveBtn" onclick="saveShift()">저장</button>
                 </div>
-            </div>
-
-            <!-- 스티커 -->
-            <div class="sticker-selector">
-                <div class="shift-selector-title">스티커</div>
-                <div class="sticker-options">
-                    <button class="sticker-option none" data-sticker="none" onclick="selectSticker('none')">안 함</button>
-                    <button class="sticker-option" data-sticker="boy" onclick="selectSticker('boy')">
-                        <img src="boy.png" alt="소년">
-                    </button>
-                    <button class="sticker-option" data-sticker="girl" onclick="selectSticker('girl')">
-                        <img src="girl.png" alt="소녀">
-                    </button>
-                    <button class="sticker-option" data-sticker="segok" onclick="selectSticker('segok')">
-                        <img src="segok.png" alt="세곡">
-                    </button>
-                    <button class="sticker-option" data-sticker="suseo" onclick="selectSticker('suseo')">
-                        <img src="suseo.png" alt="수서">
-                    </button>
-                </div>
-            </div>
-
-            <div class="event-list" id="eventList"></div>
-            <div class="color-picker">
-                <div class="color-btn black selected" data-color="black" onclick="selectColor('black')"></div>
-                <div class="color-btn yellow" data-color="yellow" onclick="selectColor('yellow')"></div>
-                <div class="color-btn blue" data-color="blue" onclick="selectColor('blue')"></div>
-                <div class="color-btn orange" data-color="orange" onclick="selectColor('orange')"></div>
-            </div>
-            <div class="add-event-form">
-                <input type="text" class="event-input" id="eventInput" placeholder="일정 입력...">
-                <button class="add-event-btn" onclick="addEvent()">추가</button>
             </div>
         </div>
     </div>
@@ -1054,7 +1152,8 @@
         // 개인 일정 및 커스텀 근무 (메모리에 캐시)
         let personalEvents = {};
         let customShifts = {};
-        let stickers = {};
+        let leftStickers = {};
+        let rightStickers = {};
 
         // ========================================
         // SUPABASE 데이터 로딩
@@ -1120,11 +1219,22 @@
         // 스티커 데이터 로드
         function loadStickers() {
             try {
-                stickers = JSON.parse(localStorage.getItem('shiftStickers') || '{}');
-                console.log('스티커 데이터 로드 완료:', Object.keys(stickers).length, '일');
+                // 이전 스티커 데이터 마이그레이션 보장
+                const oldStickers = JSON.parse(localStorage.getItem('shiftStickers') || '{}');
+                rightStickers = JSON.parse(localStorage.getItem('shiftRightStickers') || '{}');
+                leftStickers = JSON.parse(localStorage.getItem('shiftLeftStickers') || '{}');
+
+                // 마이그레이션 처리 (기존 스티커가 있고 새로운 분리 스티커 기록이 없는 경우)
+                if (Object.keys(oldStickers).length > 0 && Object.keys(rightStickers).length === 0 && Object.keys(leftStickers).length === 0) {
+                    // boy, girl은 우측, segok, suseo는 좌측으로 분류해줄 수도 있지만, 단순 호환성을 위해 우측에 할당
+                    rightStickers = oldStickers;
+                }
+
+                console.log('스티커 데이터 로드 완료');
             } catch (error) {
                 console.error('스티커 데이터 로드 실패:', error);
-                stickers = {};
+                rightStickers = {};
+                leftStickers = {};
             }
         }
 
@@ -1362,19 +1472,24 @@
                 console.warn('일정 렌더링 중 오류 무시:', err);
             }
 
-            // 스티커 표시
+            // 스티커 표시 (우측)
             const dateKey = `${year}-${month}-${day}`;
-            if (stickers[dateKey] && stickers[dateKey] !== 'none') {
+            if (rightStickers[dateKey] && rightStickers[dateKey] !== 'none') {
                 const stickerBox = document.createElement('div');
                 stickerBox.className = 'sticker-container';
-
-                // 세곡(segok), 수서(suseo) 스티커는 좌측 하단에 배치
-                if (stickers[dateKey] === 'segok' || stickers[dateKey] === 'suseo') {
-                    stickerBox.classList.add('left');
-                }
-
                 const img = document.createElement('img');
-                img.src = stickers[dateKey] + '.png';
+                img.src = rightStickers[dateKey] + '.png';
+                img.className = 'sticker-img';
+                stickerBox.appendChild(img);
+                cell.appendChild(stickerBox);
+            }
+
+            // 스티커 표시 (좌측)
+            if (leftStickers[dateKey] && leftStickers[dateKey] !== 'none') {
+                const stickerBox = document.createElement('div');
+                stickerBox.className = 'sticker-container left';
+                const img = document.createElement('img');
+                img.src = leftStickers[dateKey] + '.png';
                 img.className = 'sticker-img';
                 stickerBox.appendChild(img);
                 cell.appendChild(stickerBox);
@@ -1409,12 +1524,21 @@
                 }
             });
 
-            // 현재 스티커 상태 표시
+            // 현재 우측 스티커 상태 표시
             const dateKey = `${year}-${month}-${day}`;
-            const currentSticker = stickers[dateKey] || 'none';
-            document.querySelectorAll('.sticker-option').forEach(function (btn) {
+            const currentRightSticker = rightStickers[dateKey] || 'none';
+            document.querySelectorAll('.right-stickers .sticker-option').forEach(function (btn) {
                 btn.classList.remove('selected');
-                if (btn.dataset.sticker === currentSticker) {
+                if (btn.dataset.sticker === currentRightSticker) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            // 현재 좌측 스티커 상태 표시
+            const currentLeftSticker = leftStickers[dateKey] || 'none';
+            document.querySelectorAll('.left-stickers .sticker-option').forEach(function (btn) {
+                btn.classList.remove('selected');
+                if (btn.dataset.sticker === currentLeftSticker) {
                     btn.classList.add('selected');
                 }
             });
@@ -1496,6 +1620,24 @@
         function closeModal() {
             document.getElementById('eventModal').classList.remove('show');
             document.getElementById('eventInput').value = '';
+
+            // 모달 닫을 때 아코디언도 초기화(닫기)
+            const content = document.getElementById('stickerAccordionContent');
+            const icon = document.getElementById('stickerAccordionIcon');
+            if (content && icon) {
+                content.classList.remove('open');
+                icon.classList.remove('open');
+            }
+        }
+
+        // 스티커 아코디언 토글
+        function toggleStickerAccordion() {
+            const content = document.getElementById('stickerAccordionContent');
+            const icon = document.getElementById('stickerAccordionIcon');
+            if (content && icon) {
+                content.classList.toggle('open');
+                icon.classList.toggle('open');
+            }
         }
 
         // 일정 목록 렌더링
@@ -1630,20 +1772,43 @@
             renderCalendar();
         }
 
-        // 스티커 선택
-        function selectSticker(type) {
+        // 우측 스티커 선택
+        function selectRightSticker(type) {
             const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
             if (type === 'none') {
-                delete stickers[dateKey];
+                delete rightStickers[dateKey];
             } else {
-                stickers[dateKey] = type;
+                rightStickers[dateKey] = type;
             }
 
             // 저장
-            localStorage.setItem('shiftStickers', JSON.stringify(stickers));
+            localStorage.setItem('shiftRightStickers', JSON.stringify(rightStickers));
 
             // UI 업데이트
-            document.querySelectorAll('.sticker-option').forEach(btn => {
+            document.querySelectorAll('.right-stickers .sticker-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.sticker === (type || 'none')) {
+                    btn.classList.add('selected');
+                }
+            });
+
+            renderCalendar();
+        }
+
+        // 좌측 스티커 선택
+        function selectLeftSticker(type) {
+            const dateKey = `${selectedYear}-${selectedMonth}-${selectedDay}`;
+            if (type === 'none') {
+                delete leftStickers[dateKey];
+            } else {
+                leftStickers[dateKey] = type;
+            }
+
+            // 저장
+            localStorage.setItem('shiftLeftStickers', JSON.stringify(leftStickers));
+
+            // UI 업데이트
+            document.querySelectorAll('.left-stickers .sticker-option').forEach(btn => {
                 btn.classList.remove('selected');
                 if (btn.dataset.sticker === (type || 'none')) {
                     btn.classList.add('selected');
