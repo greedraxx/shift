@@ -721,6 +721,11 @@
             z-index: 5;
         }
 
+        .sticker-container.left {
+            right: auto;
+            left: 4px;
+        }
+
         .sticker-img {
             width: 100%;
             height: 100%;
@@ -960,6 +965,12 @@
                     </button>
                     <button class="sticker-option" data-sticker="girl" onclick="selectSticker('girl')">
                         <img src="girl.png" alt="소녀">
+                    </button>
+                    <button class="sticker-option" data-sticker="segok" onclick="selectSticker('segok')">
+                        <img src="segok.png" alt="세곡">
+                    </button>
+                    <button class="sticker-option" data-sticker="suseo" onclick="selectSticker('suseo')">
+                        <img src="suseo.png" alt="수서">
                     </button>
                 </div>
             </div>
@@ -1356,6 +1367,12 @@
             if (stickers[dateKey] && stickers[dateKey] !== 'none') {
                 const stickerBox = document.createElement('div');
                 stickerBox.className = 'sticker-container';
+
+                // 세곡(segok), 수서(suseo) 스티커는 좌측 하단에 배치
+                if (stickers[dateKey] === 'segok' || stickers[dateKey] === 'suseo') {
+                    stickerBox.classList.add('left');
+                }
+
                 const img = document.createElement('img');
                 img.src = stickers[dateKey] + '.png';
                 img.className = 'sticker-img';
